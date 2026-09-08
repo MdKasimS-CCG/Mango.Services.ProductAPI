@@ -49,5 +49,5 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker tag mango-productapi:latest ghcr.io/mdkasims-ccg//mango-productapi:latest
+          docker tag mango-productapi:latest ghcr.io/mdkasims-ccg/mango-productapi:latest
           docker push ghcr.io/mdkasims-ccg/mango-productapi:latest
