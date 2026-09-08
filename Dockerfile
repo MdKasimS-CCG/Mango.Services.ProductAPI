@@ -13,10 +13,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Backend/Mango.Services.ProductAPI/Mango.Services.ProductAPI.csproj", "Backend/Mango.Services.ProductAPI/"]
-RUN dotnet restore "./Backend/Mango.Services.ProductAPI/Mango.Services.ProductAPI.csproj"
+
+COPY ["Mango.Services.ProductAPI.csproj", "./"]
+RUN dotnet restore "./Mango.Services.ProductAPI.csproj"
+
 COPY . .
-WORKDIR "/src/Backend/Mango.Services.ProductAPI"
+
+WORKDIR "/src"
 RUN dotnet build "./Mango.Services.ProductAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
