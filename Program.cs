@@ -7,11 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-
 // Add services to the container.
 
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
