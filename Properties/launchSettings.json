@@ -37,9 +37,16 @@
         "ASPNETCORE_HTTP_PORTS": "8080",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
+<<<<<<< Updated upstream
       "publishAllPorts": true,
       "useSSL": true,
       "containerRunArguments": "--env-file \"{ProjectDir}\\.env\""
+=======
+      "publishAllPorts": false,
+      "useSSL": true,
+      "containerRunArguments": "--env-file \"{ProjectDir}\\.env\"",
+      "httpPort": 5156
+>>>>>>> Stashed changes
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
