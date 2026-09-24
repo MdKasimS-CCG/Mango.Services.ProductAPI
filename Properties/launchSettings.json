@@ -5,7 +5,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MANGO_PROFILE": "Http"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5156"
@@ -15,7 +16,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MANGO_PROFILE": "Http"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7000;http://localhost:5156"
@@ -25,7 +27,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MANGO_PROFILE": "Http"
       }
     },
     "Container (Dockerfile)": {
@@ -34,10 +37,14 @@
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_HTTP_PORTS": "8080",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "MANGO_PROFILE": "Docker"
       },
-      "publishAllPorts": true,
-      "useSSL": true
+      "publishAllPorts": false,
+      "useSSL": true,
+      "containerRunArguments": "--env-file \"{ProjectDir}\\.env\"",
+      "httpPort": 5156
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",

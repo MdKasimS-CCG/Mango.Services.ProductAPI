@@ -1,3 +1,5 @@
+using DotNetEnv;
+using Microsoft.Extensions.Options;
 using AutoMapper;
 using Mango.Services.ProductAPI;
 using Mango.Services.ProductAPI.Data;
@@ -6,7 +8,25 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
+var isDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")
+    ?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+
+var profile = Environment.GetEnvironmentVariable("MANGO_PROFILE");
+
+if (string.IsNullOrWhiteSpace(profile))
+{
+    profile = isDocker ? "Docker" : "Http";
+}
+
+if (!isDocker)
+{
+    Env.Load(".env");
+}
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables(
+    prefix: $"{profile}__");
 
 // Add services to the container.
 
@@ -14,38 +34,56 @@ IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Database Options
+builder.Services.Configure<DatabaseOptions>(
+    builder.Configuration.GetSection("ConnectionStrings"));
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(option =>
+builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
-    option.AddSecurityDefinition(name: JwtBearerDefaults.AuthenticationScheme, securityScheme: new OpenApiSecurityScheme()
-    {
-        //This name is shown in Authorize pop up of CouponAPI Swagger
-        Name = "Authorization",
-        Description = "Enter the Bearer Authorization string as following: `Bearer Generated-JWT-Token`",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {Type= ReferenceType.SecurityScheme,
-                Id=JwtBearerDefaults.AuthenticationScheme}
-            }, new string[] {} //TODO: Why this is empty here
-        }
-    });
+    var databaseOptions = serviceProvider
+        .GetRequiredService<IOptions<DatabaseOptions>>()
+        .Value;
+
+    options.UseSqlServer(databaseOptions.DefaultConnection);
 });
 
-//Adding Authentication
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(option =>
+{
+    option.AddSecurityDefinition(
+        name: JwtBearerDefaults.AuthenticationScheme,
+        securityScheme: new OpenApiSecurityScheme()
+        {
+            Name = "Authorization",
+            Description = "Enter the Bearer Authorization string as following: `Bearer Generated-JWT-Token`",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+    option.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = JwtBearerDefaults.AuthenticationScheme
+                    }
+                },
+                new string[] {}
+            }
+        });
+});
+
+// Authentication
 builder.AddAppAuthentication();
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -67,16 +105,21 @@ ApplyMigration();
 
 app.Run();
 
-
 void ApplyMigration()
 {
     using (var scope = app.Services.CreateScope())
     {
-        var _db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var db = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
 
-        if (_db.Database.GetPendingMigrations().Count() > 0)
+        if (db.Database.GetPendingMigrations().Any())
         {
-            _db.Database.Migrate();
+            db.Database.Migrate();
         }
     }
+}
+
+public class DatabaseOptions
+{
+    public string DefaultConnection { get; set; } = string.Empty;
 }
